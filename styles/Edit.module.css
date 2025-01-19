@@ -4,27 +4,9 @@
 }
 
 .container {
-  max-width: calc(100% - 2rem);
+  padding: 2rem;
+  max-width: 800px;
   margin: 0 auto;
-}
-
-.tabsWrapper {
-  display: flex;
-  align-items: flex-end;
-  gap: 2rem;
-}
-
-.linkButton {
-  background: #fff;
-  border: none;
-  color: #0000ee;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.paginationWrapper {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .header {
@@ -32,6 +14,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.heading {
+  text-transform: capitalize;
 }
 
 .form {
@@ -109,4 +95,6 @@
   text-align: center;
   padding: 2rem;
   color: #4a5568;
+  text-transform: capitalize;
+  font-weight: 800;
 }

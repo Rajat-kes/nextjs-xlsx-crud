@@ -1,0 +1,11 @@
+.searchTab {
+  padding: 0.8rem 1.4rem;
+  background: #fff;
+  border: 1px solid #c9c9c9;
+  cursor: pointer;
+}
+
+.activeTab {
+  background: #0056b3;
+  color: #fff;
+}

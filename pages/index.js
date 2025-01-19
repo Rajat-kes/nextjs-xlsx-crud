@@ -1,131 +1,130 @@
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import { useRouter } from "next/navigation";
+
+// api client
+import { apiClient } from "../apiClient";
+
+// components
+import Pagination from "../components/Pagination/Pagination";
+import { Header } from "../components/Header/Header";
+import { SearchBar } from "../components/SearchBar/SearchBar";
+import { Table } from "../components/Table/Table";
+import { Tabs, defaultTabs } from "../components/Tabs/Tabs";
+
+// styles
+import styles from "../styles/Home.module.css";
+
+// constants
+const projectsPerPage = 10;
+const totalProjects = 100;
+const firstTabId = defaultTabs[0].id;
 
 export default function Home() {
+  const router = useRouter();
+
+  // state
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState(firstTabId);
+  const [listdata, setListdata] = useState({});
+  const [sortKey, setSortKey] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // useEffect to fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.fetchAll({
+          fileName: activeTab || firstTabId,
+          page: currentPage,
+          limit: projectsPerPage,
+          keyword: search,
+          sortKey: sortKey,
+          sortOrder: sortOrder,
+        });
+        if (response?.success) {
+          setListdata(response);
+        } else {
+          throw new Error("Error fetching data");
+        }
+      } catch (error) {
+        console.error("Error fetching tabledata:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    setIsLoading(true);
+    fetchData();
+  }, [search, currentPage, activeTab, sortOrder, sortKey]);
+
+  // pagination page numbers update
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // search query update
+  const handleUpdateSearch = useCallback((query) => {
+    setSearch(query);
+    paginate(1);
+  }, []);
+
+  // tab change update
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+    paginate(1);
+  }, []);
+
+  // sort key and order update
+  const handleSortChange = useCallback((key, order) => {
+    setSortKey(key);
+    setSortOrder(order);
+    paginate(1);
+  }, []);
+
+  const handleOpenEditMode = useCallback(
+    (id) => {
+      router.push(`/edit/${activeTab}/${id}`);
+    },
+    [activeTab]
+  );
+
   return (
-    <div className={styles.container}>
+    <>
       <Head>
-        <title>Create Next App</title>
+        <title>Decommission Dashboard</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+      <main className={styles.main}>
+        <Header />
+        <div className={styles.container}>
+          <SearchBar onChange={handleUpdateSearch} />
+          <div className={styles.tabsWrapper}>
+            <Tabs onChange={handleTabChange} activeTabId={activeTab} />
+            <button className={styles.linkButton}>Export to. Excel</button>
+          </div>
+          <Table
+            data={listdata?.data}
+            headers={listdata?.headers}
+            isLoading={isLoading}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
+            handleOpenEditMode={handleOpenEditMode}
+          />
+          <div className={styles.paginationWrapper}>
+            <Pagination
+              projectsPerPage={listdata?.limit || projectsPerPage}
+              totalProjects={listdata?.total || 0}
+              paginate={paginate}
+              currentPage={currentPage}
+            />
+          </div>
         </div>
       </main>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className={styles.logo} />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        footer img {
-          margin-left: 0.5rem;
-        }
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-decoration: none;
-          color: inherit;
-        }
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family:
-            Menlo,
-            Monaco,
-            Lucida Console,
-            Liberation Mono,
-            DejaVu Sans Mono,
-            Bitstream Vera Sans Mono,
-            Courier New,
-            monospace;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family:
-            -apple-system,
-            BlinkMacSystemFont,
-            Segoe UI,
-            Roboto,
-            Oxygen,
-            Ubuntu,
-            Cantarell,
-            Fira Sans,
-            Droid Sans,
-            Helvetica Neue,
-            sans-serif;
-        }
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
