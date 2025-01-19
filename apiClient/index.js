@@ -142,6 +142,36 @@ export const apiClient = {
       return handleError(err);
     }
   },
+
+  /**
+   * Handle API GET request to download a file.
+   * @param {Object} params - Parameters for the API call.
+   * @param {string} params.fileName - Name of the file to download.
+   * @returns {Promise<Blob>} The downloaded file blob.
+   */
+  async download({ fileName }) {
+    if (!fileName) {
+      throw new Error("fileName is required for download");
+    }
+
+    try {
+      // Construct the query string
+      const query = new URLSearchParams({ fileName });
+
+      // Fetch the file from the server
+      const res = await fetch(`/api/v1/download?${query.toString()}`);
+
+      // Check if the response is successful
+      if (!res.ok) {
+        throw new Error("Failed to download the file");
+      }
+
+      // Return the file blob (could be used to trigger a download in the frontend)
+      return await res.blob();
+    } catch (err) {
+      return handleError(err);
+    }
+  },
 };
 
 /**

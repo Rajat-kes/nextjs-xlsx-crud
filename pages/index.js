@@ -49,7 +49,8 @@ export default function Home() {
         if (response?.success) {
           setListdata(response);
         } else {
-          throw new Error("Error fetching data");
+          console.error("Error fetching tabledata");
+          setListdata({});
         }
       } catch (error) {
         console.error("Error fetching tabledata:", error);
@@ -85,12 +86,39 @@ export default function Home() {
     paginate(1);
   }, []);
 
+  // open edit mode
   const handleOpenEditMode = useCallback(
     (id) => {
       router.push(`/edit/${activeTab}/${id}`);
     },
     [activeTab]
   );
+
+  // Download xlsx file
+  const downloadFile = useCallback(async () => {
+    try {
+      // Fetch the file blob using the API client
+      const fileBlob = await apiClient.download({ fileName: activeTab });
+
+      if (!fileBlob || !(fileBlob instanceof Blob)) {
+        return console.error("Invalid file format or empty file received");
+      }
+
+      // Create a link element to trigger the download
+      const link = document.createElement("a");
+      const objectUrl = URL.createObjectURL(fileBlob);
+      link.href = objectUrl;
+      link.download = `${activeTab}.xlsx`; // Ensure a proper filename with extension
+      link.style.display = "none"; // Hide the link element
+      document.body.appendChild(link);
+
+      link.click(); // Trigger the download
+      URL.revokeObjectURL(objectUrl); // Clean up the object URL
+      document.body.removeChild(link); // Remove the link element
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  }, [activeTab]);
 
   return (
     <>
@@ -104,7 +132,14 @@ export default function Home() {
           <SearchBar onChange={handleUpdateSearch} />
           <div className={styles.tabsWrapper}>
             <Tabs onChange={handleTabChange} activeTabId={activeTab} />
-            <button className={styles.linkButton}>Export to. Excel</button>
+            <button
+              className={`${styles.linkButton} ${
+                !listdata?.data?.length ? styles.disabled : ""
+              }`}
+              onClick={downloadFile}
+            >
+              Export to. Excel
+            </button>
           </div>
           <Table
             data={listdata?.data}
